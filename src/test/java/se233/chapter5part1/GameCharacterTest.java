@@ -181,5 +181,52 @@ public class GameCharacterTest {
         assertTrue(keys.isPressed(KeyCode.A), "A should be detected as pressed");
     }
 
+    // collided() method
+    @Test
+    public void collided_horizontalCollision_adjustsXAndStopsAndReturnsFalse() {
+        gameCharacter.respawn();
+        GameCharacter target = new GameCharacter(1, 200, 30, "assets/Character1.png",
+                4, 3, 2, 111, 97, KeyCode.A, KeyCode.D, KeyCode.W);
+
+
+        int overlap = 10;
+        gameCharacter.setX(target.getX() - gameCharacter.getCharacterWidth() + overlap);
+        gameCharacter.moveRight();
+        int beforeCollideX = gameCharacter.getX();
+
+        boolean collided = gameCharacter.collided(target);
+
+        assertFalse(collided, "Horizontal collision should not be treated as a vertical hit");
+        assertEquals(target.getX() - gameCharacter.getCharacterWidth(), gameCharacter.getX(),
+                "Character should be positioned flush to the left of the target after collision");
+
+        int xAfterCollision = gameCharacter.getX();
+        gameCharacter.moveX();
+        assertEquals(xAfterCollision, gameCharacter.getX(), "Character should stop after horizontal collision");
+        assertTrue(beforeCollideX >= xAfterCollision, "X should not move past the target");
+    }
+
+    @Test
+    public void collided_verticalCollision_fromAbove_incrementsScoreRespawnsTargetAndReturnsTrue() {
+        gameCharacter.respawn();
+        GameCharacter target = new GameCharacter(2, 30, 200, "assets/Character1.png",
+                4, 3, 2, 111, 97, KeyCode.A, KeyCode.D, KeyCode.W);
+
+        int initialScore = gameCharacter.getScore();
+        int targetStartY = target.getStartY();
+
+        gameCharacter.setY(100);
+        assertTrue(gameCharacter.getY() < target.getY(), "Setup failed: player should be above the target");
+
+        boolean collided = gameCharacter.collided(target);
+
+        assertTrue(collided, "Vertical collision from above should return true");
+        assertEquals(initialScore + 1, gameCharacter.getScore(), "Score should increment on successful stomp");
+        assertTrue(gameCharacter.getY() >= target.getY(), "Y should be at least target's Y after collision handling");
+        assertTrue(gameCharacter.getY() <= GameStage.GROUND - gameCharacter.getCharacterHeight(),
+                "Y should not exceed ground level after collision handling");
+        assertEquals(targetStartY, target.getY(), "Target should respawn to its start Y after being collapsed");
+    }
+
 }
 
